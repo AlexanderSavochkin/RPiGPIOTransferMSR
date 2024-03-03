@@ -1,0 +1,48 @@
+#    input ref_clk,  //ICEStick 12MHz clock
+#    input rst,
+#    input data_req,
+#    output reg data_rdy,
+#    output reg [23:0] msr_data
+
+
+# 12MHz clock
+set_io    ref_clk  21
+
+# DATA READY, FPGA -> SBC
+set_io    data_rdy  78
+
+# DATA REQUEST, SBC -> FPGA
+set_io    data_req  79
+
+# RESET SBC -> FPGA
+set_io    rst  80
+
+# 24-bit data bus
+set_io    msr_data[0]  62
+set_io    msr_data[1]  114
+set_io    msr_data[2]  44
+set_io    msr_data[3]  45
+set_io    msr_data[4]  47
+set_io    msr_data[5]  87
+set_io    msr_data[6]  88
+set_io    msr_data[7]  115
+set_io    msr_data[8]  116
+set_io    msr_data[9]  60
+set_io    msr_data[10] 56
+set_io    msr_data[11] 61
+set_io    msr_data[12] 113
+set_io    msr_data[13] 90
+set_io    msr_data[14] 119
+set_io    msr_data[15] 118
+
+set_io    msr_data[16]  45
+set_io    msr_data[17]  48
+set_io    msr_data[18]  117
+set_io    msr_data[19]  91
+set_io    msr_data[20]  81
+
+#LED's ouf the ICEStick board, not used, just to wire the signals to something 
+set_io    msr_data[21]  95
+set_io    msr_data[22]  96
+set_io    msr_data[23]  97
+
