@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 // Physical Memory Allocation, from raspberrypi/userland demo.
-#include "mailbox.h"
+//#include "mailbox.h"
 
 // GPIO which we want to toggle in this example.
 #define TOGGLE_GPIO 14
@@ -174,10 +174,12 @@ void poll_data_from_gpio(uint32_t *buffer, uint32_t size) {
         *(gpio_port + (GPIO_SET_OFFSET / sizeof(uint32_t))) = (1<<25);
 
         //Wait for the DATA_READY signal from the device
-        while((*(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & (1<<24)) == 0);
+        while((*(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & (1<<27)) == 0);
 
         //Read the data from the device
         buffer[i] = *(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & 0xFFFFFF;
+
+        //printf("Data read: %u\n", (unsigned int)buffer[i]);
 
         //Clear the DATA_REQUEST signal to the device
         *(gpio_port + (GPIO_CLR_OFFSET / sizeof(uint32_t))) = (1<<25);
@@ -185,17 +187,20 @@ void poll_data_from_gpio(uint32_t *buffer, uint32_t size) {
         //Wait for the DATA_READY signal from the device to be cleared
         while((*(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & (1<<24)) != 0);
     }
+
+    puts("Done !!!");
 }
 
 
 int main(int argc, char *argv[]) {
     //Reading 500Mb of data from the GPIO
-    uint32_t *buffer = (uint32_t*) malloc(500000000);
-    poll_data_from_gpio(buffer, 500000000);
+    const unsigned samples_count = 500000000;
+    uint32_t *buffer = (uint32_t*) malloc(samples_count * sizeof(uint32_t));
+    poll_data_from_gpio(buffer, samples_count);
 
     // Write to file
     FILE *file = fopen("data.bin", "wb");
-    fwrite(buffer, 1, 500000000, file);
+    fwrite(buffer, sizeof(uint32_t), samples_count, file);
     fclose(file);
 
     return 0;
