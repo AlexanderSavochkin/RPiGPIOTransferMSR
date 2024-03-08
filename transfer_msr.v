@@ -6,8 +6,10 @@ module transfer_msr(
     output reg [23:0] msr_data
 );
 
-    reg prev_data_req;
-    reg prev_prev_data_req;
+    reg data_req_1;
+    reg data_req_2;
+    reg data_req_3;
+
     reg [23:0] timer_count;
 
 
@@ -31,20 +33,23 @@ module transfer_msr(
         .BYPASS(1'b0)
     );
 
-    //always @(posedge clk) begin
     always @(posedge clk) begin
         if (rst) begin
             msr_data <= 24'b0;
             timer_count <= 24'b0;
-            prev_data_req <= 1'b0;
-            prev_prev_data_req <= 1'b0;
+            data_req_1 <= 1'b0;
+            data_req_2 <= 1'b0;
+            data_req_3 <= 1'b0;
         end else 
-        begin 
-            if (data_req & ~prev_data_req) begin
+        begin
+            // Since the data_req comes from the external source, we need 
+            // to synchronize it See Harris, Harris, chapters 3.5.5, 4.4.4
+            // or https://en.wikipedia.org/wiki/Incremental_encoder#Clock_synchronization
+            if (data_req_1 & ~data_req_2) begin
                 msr_data <= timer_count;
-            end else if (data_req & prev_data_req & ~prev_prev_data_req) begin
+            end else if (data_req_1 & data_req_2) begin
                 data_rdy <= 1'b1;
-            end else if (~data_req & prev_data_req) begin
+            end else if (~data_req_1) begin
                 data_rdy <= 1'b0;
             end
 
@@ -54,8 +59,10 @@ module transfer_msr(
                 timer_count <= timer_count + 1;
             end
 
-            prev_data_req <= data_req;
-            prev_prev_data_req <= prev_data_req;
+            data_req_1 <= data_req;
+            data_req_2 <= data_req_1;
+            data_req_3 <= data_req_2;
+
         end;
     end
 

@@ -92,6 +92,7 @@
 #define DMA_CS_PRIORITY(x) ((x)&0xf << 16)
 #define DMA_CS_PANIC_PRIORITY(x) ((x)&0xf << 20)
 
+#define GAP 10000
 
 
 static int mbox_fd = -1;   // used internally by the UncachedMemBlock-functions.
@@ -177,15 +178,13 @@ void poll_data_from_gpio(uint32_t *buffer, uint32_t size) {
         while((*(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & (1<<27)) == 0);
 
         //Read the data from the device
-        buffer[i] = *(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & 0xFFFFFF;
-
-        //printf("Data read: %u\n", (unsigned int)buffer[i]);
+        buffer[i] = *(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & 0x1FFFFFF;
 
         //Clear the DATA_REQUEST signal to the device
         *(gpio_port + (GPIO_CLR_OFFSET / sizeof(uint32_t))) = (1<<25);
 
         //Wait for the DATA_READY signal from the device to be cleared
-        while((*(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & (1<<24)) != 0);
+        while((*(gpio_port + (GPIO_LEV_OFFSET / sizeof(uint32_t))) & (1<<27)) != 0);
     }
 
     puts("Done !!!");
@@ -198,9 +197,19 @@ int main(int argc, char *argv[]) {
     uint32_t *buffer = (uint32_t*) malloc(samples_count * sizeof(uint32_t));
     poll_data_from_gpio(buffer, samples_count);
 
+    //Calculate the ticks difference between each sample in place
+    for (int i = 0; i < samples_count - 1; ++i) {
+        if (buffer[i] > 0x1FFFFFF - GAP && buffer[i + 1] < GAP) {
+            buffer[i] = 0x1FFFFFF - buffer[i] + buffer[i + 1];
+        }
+        else {
+            buffer[i] = buffer[i + 1] - buffer[i];
+        }
+    }
+
     // Write to file
     FILE *file = fopen("data.bin", "wb");
-    fwrite(buffer, sizeof(uint32_t), samples_count, file);
+    fwrite(buffer, sizeof(uint32_t), samples_count - 1, file);
     fclose(file);
 
     return 0;
