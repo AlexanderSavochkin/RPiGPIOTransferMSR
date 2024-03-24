@@ -8,7 +8,6 @@ module transfer_msr(
 
     reg data_req_1;
     reg data_req_2;
-    reg data_req_3;
 
     reg [23:0] timer_count;
 
@@ -39,7 +38,6 @@ module transfer_msr(
             timer_count <= 24'b0;
             data_req_1 <= 1'b0;
             data_req_2 <= 1'b0;
-            data_req_3 <= 1'b0;
         end else 
         begin
             // Since the data_req comes from the external source, we need 
@@ -61,7 +59,6 @@ module transfer_msr(
 
             data_req_1 <= data_req;
             data_req_2 <= data_req_1;
-            data_req_3 <= data_req_2;
 
         end;
     end
